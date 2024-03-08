@@ -1,3 +1,5 @@
+![Helmister](images/logo.png)
+
 Helmister
 --------------------------
 
