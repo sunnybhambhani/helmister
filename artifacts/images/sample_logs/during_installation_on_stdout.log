@@ -1,0 +1,77 @@
+$ ./helmister install
+ ____________________________
+< Helmister, Install charts! >
+ ----------------------------
+   \
+    \
+        .--.
+       |o_o |
+       |:_/ |
+      //   \ \
+     (|     | )
+    /'\_   _/`\
+    \___)=(___/
+
+[2024-03-13 19:15:02] [INFO] Generic/common values based on config.yaml file
+[2024-03-13 19:15:02] [INFO] Dry Run: false
+[2024-03-13 19:15:02] [INFO] Create Namespace: true
+[2024-03-13 19:15:02] [INFO] Wait: false
+[2024-03-13 19:15:02] [INFO] Timeout: false
+[2024-03-13 19:15:02] [INFO] ****************************
+[2024-03-13 19:15:02] [INFO] Chart specific values based on config.yaml file
+[2024-03-13 19:15:02] [INFO] Release Name: nginx
+[2024-03-13 19:15:02] [INFO] Chart Name: nginx
+[2024-03-13 19:15:02] [INFO] Chart Repo: oci://registry-1.docker.io/bitnamicharts
+[2024-03-13 19:15:02] [INFO] Values File: values/nginx-values.yaml
+[2024-03-13 19:15:02] [INFO] Version: null
+[2024-03-13 19:15:02] [INFO] Namespace: null
+[2024-03-13 19:15:02] [INFO] ****************************
+[2024-03-13 19:15:02] [INFO] Installing nginx with release name nginx from oci://registry-1.docker.io/bitnamicharts with version null using values file: values/nginx-values.yaml in default namespace
+[2024-03-13 19:15:02] [INFO] Executing command: helm upgrade --install nginx oci://registry-1.docker.io/bitnamicharts/nginx -f values/nginx-values.yaml -n default --create-namespace
+[2024-03-13 19:15:06] [INFO] install with release name 'nginx' completed successfully in default namespace
+[2024-03-13 19:15:06] [INFO] ****************************
+[2024-03-13 19:15:07] [WARN] Pods for release nginx are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:15:12] [WARN] Pods for release nginx are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:15:17] [INFO] All Pods for release nginx are in Running state
+[2024-03-13 19:15:19] [INFO] Chart specific values based on config.yaml file
+[2024-03-13 19:15:19] [INFO] Release Name: argocd
+[2024-03-13 19:15:19] [INFO] Chart Name: argo-cd
+[2024-03-13 19:15:19] [INFO] Chart Repo: https://argoproj.github.io/argo-helm
+[2024-03-13 19:15:19] [INFO] Values File: values/argo-cd.yaml
+[2024-03-13 19:15:19] [INFO] Version: 6.4.0
+[2024-03-13 19:15:19] [INFO] Namespace: argo-cd
+[2024-03-13 19:15:19] [INFO] ****************************
+[2024-03-13 19:15:19] [INFO] Installing argo-cd with release name argocd from https://argoproj.github.io/argo-helm with version 6.4.0 using values file: values/argo-cd.yaml in argo-cd namespace
+[2024-03-13 19:15:19] [INFO] Executing command: helm upgrade --install argocd argoproj.github.io/argo-cd -f values/argo-cd.yaml -n argo-cd --create-namespace --version 6.4.0
+[2024-03-13 19:15:25] [INFO] install with release name 'argocd' completed successfully in argo-cd namespace
+[2024-03-13 19:15:25] [INFO] ****************************
+[2024-03-13 19:15:25] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:15:30] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:15:35] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:15:40] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:15:46] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:15:51] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:15:56] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:16:01] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:16:07] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:16:12] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:16:17] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:16:22] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:16:27] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:16:32] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:16:38] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:16:43] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:16:48] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:16:53] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:16:58] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:17:03] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:17:09] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:17:14] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:17:19] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:17:24] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:17:29] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:17:34] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:17:40] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:17:45] [WARN] Pods for release argocd are not yet in Running state, checking again in 5 seconds
+[2024-03-13 19:17:50] [INFO] All Pods for release argocd are in Running state
+[2024-03-13 19:17:52] [INFO] All actions completed successfully
