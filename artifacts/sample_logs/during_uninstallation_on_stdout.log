@@ -1,0 +1,43 @@
+$ ./helmister uninstall
+ ______________________________
+< Helmister, Uninstall charts! >
+ ------------------------------
+   \
+    \
+        .--.
+       |o_o |
+       |:_/ |
+      //   \ \
+     (|     | )
+    /'\_   _/`\
+    \___)=(___/
+
+[2024-03-13 19:47:14] [INFO] Generic/common values based on config.yaml file
+[2024-03-13 19:47:15] [INFO] Dry Run: false
+[2024-03-13 19:47:15] [INFO] Create Namespace: true
+[2024-03-13 19:47:15] [INFO] Wait: false
+[2024-03-13 19:47:15] [INFO] Timeout: false
+[2024-03-13 19:47:15] [INFO] ****************************
+[2024-03-13 19:47:15] [INFO] Chart specific values based on config.yaml file
+[2024-03-13 19:47:15] [INFO] Release Name: nginx
+[2024-03-13 19:47:15] [INFO] Chart Name: nginx
+[2024-03-13 19:47:15] [INFO] Chart Repo: oci://registry-1.docker.io/bitnamicharts
+[2024-03-13 19:47:15] [INFO] Values File: values/nginx-values.yaml
+[2024-03-13 19:47:15] [INFO] Version: null
+[2024-03-13 19:47:15] [INFO] Namespace: null
+[2024-03-13 19:47:15] [INFO] ****************************
+[2024-03-13 19:47:15] [INFO] Uninstalling nginx with release name 'nginx' from default namespace
+[2024-03-13 19:47:15] [INFO] uninstall with release name 'nginx' completed successfully in default namespace
+[2024-03-13 19:47:15] [INFO] ****************************
+[2024-03-13 19:47:17] [INFO] Chart specific values based on config.yaml file
+[2024-03-13 19:47:17] [INFO] Release Name: argocd
+[2024-03-13 19:47:17] [INFO] Chart Name: argo-cd
+[2024-03-13 19:47:17] [INFO] Chart Repo: https://argoproj.github.io/argo-helm
+[2024-03-13 19:47:17] [INFO] Values File: values/argo-cd.yaml
+[2024-03-13 19:47:17] [INFO] Version: 6.4.0
+[2024-03-13 19:47:17] [INFO] Namespace: argo-cd
+[2024-03-13 19:47:17] [INFO] ****************************
+[2024-03-13 19:47:17] [INFO] Uninstalling argo-cd with release name 'argocd' from argo-cd namespace
+[2024-03-13 19:47:18] [INFO] uninstall with release name 'argocd' completed successfully in argo-cd namespace
+[2024-03-13 19:47:18] [INFO] ****************************
+[2024-03-13 19:47:20] [INFO] All actions completed successfully
