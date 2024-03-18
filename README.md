@@ -11,7 +11,8 @@ Motive
 - In some of the air-gapped environments it is sometimes a bit difficult to use the tools/utilities available because moving things inside an air-gapped environment is a challenge.
 - Some of the environments are so secure that one may need to follow a whole process of getting all the security clearances and approval before using a tool/utility, which is all together a nightmare.
 - I chose bash, the reason being it is pretty common among engineers and it is easily understandable.
-- Plus I chose to have the script/utility source code open so that anyone can copy it, and tweak it based on their requirements.
+- The source code can be found here: <https://github.com/sunnybhambhani/helmister>
+- You can copy it, and tweak it based on your requirements.
 
 Usage
 --------------------------
@@ -58,6 +59,7 @@ Note
 --------------------------
 
 - Charts is an array, it can contain as many releases as you want.
-- Helmister also support both oci:// and https:// registries.
+- It also support both oci:// and https:// registries.
 - All the key value pairs under charts are mandatory except version and namespace,
   - If not provided it will consider latest chart and default namespace respectively.
+- Initial messages are printed using cowsay (It is not necessary though if required, get this installed using apt/yum/brew/dpkg based on your distribution).
