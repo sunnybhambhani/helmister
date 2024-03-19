@@ -3,7 +3,7 @@
 Helmister
 --------------------------
 
-This is a small bash utility which can help to install and uninstall multiple helm charts in one go.
+This is a small bash utility which can help to install and uninstall multiple helm charts in one go. The idea is inspired by `helmfile`.
 
 Motive
 --------------------------
