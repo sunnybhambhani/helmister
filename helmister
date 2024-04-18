@@ -1,0 +1,290 @@
+#!/bin/bash
+
+# Author: Sunny Bhambhani
+# Version: 1.0.0
+# Date: 07-Apr-2024
+# Description: This is a small bash utility which can help to install and uninstall multiple helm charts in one go.
+# Github URL: https://github.com/sunnybhambhani/helmister
+
+# Set the path of log and archive logs, these logs are basically helmister logs
+LOG_DEST="logs"
+mkdir -p $LOG_DEST/archive
+LOG_FILE="$LOG_DEST/helmister.log"
+ARCHIVE_LOG_FILE="helmister_$(date +'%Y%m%d_%H%M%S').tar.gz"
+
+# Compress older log file and remove old log file if it already exists
+if [ -f "$LOG_FILE" ]; then
+  tar -czf $ARCHIVE_LOG_FILE "$LOG_FILE"
+  mv $ARCHIVE_LOG_FILE $LOG_DEST/archive
+  rm "$LOG_FILE"
+fi
+
+
+# Function to standardize log messages with LOG_LEVEL and LOG_TIME
+# Plus to make sure they are printed on the STDOUT as well as in the log_file
+log_message() {
+  LOG_TIME=$(date +"%Y-%m-%d %H:%M:%S")
+  LOG_LEVEL=$1
+  MESSAGE=$2
+
+  echo "[$LOG_TIME] [$LOG_LEVEL] $MESSAGE"
+  echo "[$LOG_TIME] [$LOG_LEVEL] $MESSAGE" >> "$LOG_FILE"
+}
+
+
+# Function to check pod health and to make sure pods of a given release are in running state 
+# This script will terminate if the pods are not running for more than 20 minutes, which is something that should ideally not happen.
+check_pod_status() {
+  RELEASE_NAME=$1
+  NAMESPACE=$2
+  START_TIME=$(date +%s)
+  while true; do
+    CURRENT_TIME=$(date +%s)
+    ELAPSED_TIME=$((CURRENT_TIME - START_TIME))
+    if [[ $ELAPSED_TIME -gt 1200 ]]; then
+      log_message "ERROR" "Pods for release $RELEASE_NAME are not in Running state for more than 20 minutes. Exiting"
+      exit 2
+    fi
+    TOTAL_PODS=$(kubectl get pods -l app.kubernetes.io/instance=$RELEASE_NAME -n $NAMESPACE --no-headers | wc -l)
+    if [[ $TOTAL_PODS == "0" ]]; then
+      log_message "ERROR" "There are no pods for $RELEASE_NAME"
+      exit 3
+    else
+      POD_STATUS=$(kubectl get pods -l app.kubernetes.io/instance=$RELEASE_NAME -n $NAMESPACE --no-headers | awk -F " " '{print $3}' | grep -vi running | wc -l)
+      if [[ $POD_STATUS == "0" ]]; then
+        log_message "INFO" "All Pods for release $RELEASE_NAME are in Running state"
+        break
+      else
+        log_message "WARN" "Pods for release $RELEASE_NAME are not yet in Running state, checking again in 5 seconds"
+        sleep 5
+      fi            
+      log_message "WARN" "Pods for release $RELEASE_NAME are not yet in Running state, checking again in 5 seconds"
+      sleep 5
+    fi
+  done
+}
+
+
+# Function to show help on how to use this utility? and what all options are available
+# It also contains a sample config.yaml file which is a must for this utility to function properly.
+show_help() {
+  echo "Usage: $0 [OPTIONS]"
+  echo "--------------------------"
+  echo "Options:"
+  echo "--------------------------"
+  echo "  install      Install multiple helm charts in one go.
+               Just need to have config.yaml file with what all charts needs to be installed.
+               For more information around config.yaml, sample file is a part of base folder."
+  echo "  uninstall    Uninstall multiple helm charts in one go, this command too will consume the
+               same config.yaml."
+  echo "  help         Display help."
+  echo ""
+  echo ""
+  echo "Sample config.yaml:"
+  echo "--------------------------
+dry_run: false
+create_namespace: true
+wait: false
+timeout: false # If true, defaults to 20 mins
+charts:
+  - release_name: nginx
+    chart_name: nginx
+    chart_repo: oci://registry-1.docker.io/bitnamicharts
+    values_file: values/nginx-values.yaml
+  - release_name: argocd
+    chart_name: argo-cd
+    chart_repo: https://argoproj.github.io/argo-helm
+    values_file: values/argo-cd.yaml
+    version: 6.4.0
+    namespace: argo-cd
+
+Note: 
+--------------------------
+- Charts is an array, it can contain as many releases as you want.
+- It support oci:// and https:// registries.
+- All the key value pairs under charts are mandatory except version and namespace,
+  If not provided it will consider latest chart and default namespace respectively."
+  exit 0
+}
+
+
+# Function to log what all generic values we have in our config.yaml file
+generic_values() {
+  log_message "INFO" "Generic/common values based on config.yaml file"
+    
+  DRY_RUN=$(yq e '.dry_run' config.yaml)
+  CREATE_NAMESPACE=$(yq e '.create_namespace' config.yaml)
+  WAIT=$(yq e '.wait' config.yaml)
+  TIMEOUT=$(yq e '.timeout' config.yaml)
+    
+  log_message "INFO" "Dry Run: $DRY_RUN"
+  log_message "INFO" "Create Namespace: $CREATE_NAMESPACE"
+  log_message "INFO" "Wait: $WAIT"
+  log_message "INFO" "Timeout: $TIMEOUT"
+  log_message "INFO" "****************************"  
+}
+
+
+# Funtion to log what all chart specific values we have in our config.yaml file
+genric_chart_values() {
+  log_message "INFO" "Chart specific values based on config.yaml file"
+  log_message "INFO" "Release Name: $RELEASE_NAME"
+  log_message "INFO" "Chart Name: $CHART_NAME"
+  log_message "INFO" "Chart Repo: $CHART_REPO"
+  log_message "INFO" "Values File: $VALUES_FILE"
+  log_message "INFO" "Version: $VERSION"
+  log_message "INFO" "Namespace: $NAMESPACE"
+  log_message "INFO" "****************************"
+}
+
+
+# Function to show initial message which is created using cowsay
+# It is not necessary though if required, get this installed using apt/yum/brew/dpkg based on your distribution
+helmister() {
+  which cowsay > /dev/null
+  if [[ $? == "0" ]]; then
+    MESSAGE=$1
+    echo -e "\e[5m\e[1;31m$MESSAGE\e[0m" | cowsay -f tux.cow -n
+  else
+    MESSAGE=$1
+    log_message "INFO" "$MESSAGE"
+  fi
+}
+
+
+# Function for the main logic and what all option we have in this utility
+perform_action() {
+  ACTION=$1
+  RELEASE_NAME=$2
+  CHART_NAME=$3
+  CHART_REPO=$4
+  VALUES_FILE=$5
+  VERSION=$6
+  NAMESPACE=$7
+  DRY_RUN=$8
+  CREATE_NAMESPACE=$9
+  WAIT=$10
+  TIMEOUT=$11
+  FULL_REPO=$CHART_REPO/$CHART_NAME
+  REPO_TYPE="oci"
+
+  if [[ $CHART_REPO == "https://"* ]]; then
+    REPO_NAME=$(echo $CHART_REPO | awk -F/ '{print $3}')
+    helm repo add $REPO_NAME $CHART_REPO > /dev/null
+    FULL_REPO=$REPO_NAME/$CHART_NAME
+    REPO_TYPE="https"
+  fi
+
+  if [[ $NAMESPACE == null ]]; then
+    NAMESPACE="default"
+  fi
+
+  if [ "$ACTION" == "install" ]; then
+    log_message "INFO" "Installing $CHART_NAME with release name $RELEASE_NAME from $CHART_REPO with version $VERSION using values file: $VALUES_FILE in $NAMESPACE namespace"
+    HELM_COMMAND="helm upgrade --install "$RELEASE_NAME" "$FULL_REPO" -f "$VALUES_FILE" -n "$NAMESPACE""
+
+    if [ "$DRY_RUN" == "true" ]; then
+      HELM_COMMAND+=" --dry-run=client"
+    fi
+  
+    if [ "$CREATE_NAMESPACE" == "true" ]; then
+      HELM_COMMAND+=" --create-namespace"
+    fi
+  
+    if [ "$WAIT" == "true" ]; then
+      HELM_COMMAND+=" --wait"
+    fi
+  
+    if [ "$TIMEOUT" == "true" ]; then
+      HELM_COMMAND+=" --timeout=20m"
+    fi
+
+    if [ "$VERSION" != null ]; then
+      HELM_COMMAND+=" --version $VERSION"
+    fi
+    
+    log_message "INFO" "Executing command: $HELM_COMMAND"
+    eval "$HELM_COMMAND" >> "$LOG_FILE" 2>&1
+
+
+  elif [ "$ACTION" == "uninstall" ]; then
+    log_message "INFO" "Uninstalling $CHART_NAME with release name '$RELEASE_NAME' from $NAMESPACE namespace"
+    helm uninstall "$RELEASE_NAME" -n "$NAMESPACE" >> "$LOG_FILE" 2>&1
+
+  else
+    helmister "Uh-oh! something is wrong"  
+    log_message "INFO" "Usage: $0 [OPTIONS]"
+    log_message "ERROR" "Invalid action, please see help using 'helmister help'"
+    exit 1
+  fi
+
+
+  # Check the status of last executed command
+  if [ $? -eq 0 ]; then
+    log_message "INFO" "$ACTION with release name '$RELEASE_NAME' completed successfully in $NAMESPACE namespace"
+    log_message "INFO" "****************************"
+  else
+    log_message "ERROR" "Failed to $ACTION $CHART_NAME with release name '$RELEASE_NAME' from/in $NAMESPACE namespace"
+    log_message "ERROR" "Check $LOG_FILE for details."
+    log_message "INFO" "****************************"
+    exit 1
+  fi
+}
+
+
+# Condition to check if any arguments are provided or not
+# If not, point them to helmister help
+if [ "$#" -ne 1 ]; then
+  helmister "Uh-oh! something is wrong"  
+  log_message "INFO" "Usage: $0 [OPTIONS]"
+  log_message "ERROR" "Invalid action, please see help using 'helmister help'"
+  exit 1
+fi
+
+# Define ACTION i.e. the option which this utility is capable of
+ACTION=$1
+
+# Based on the action install, uninstall, etc perform it and provide indented results and logs
+if [ "$ACTION" == "install" ]; then
+  helmister "Helmister, Install charts!"
+  generic_values
+  while IFS=$'\t' read -r RELEASE_NAME CHART_NAME CHART_REPO VALUES_FILE VERSION NAMESPACE; do
+    genric_chart_values
+    perform_action "$ACTION" "$RELEASE_NAME" "$CHART_NAME" "$CHART_REPO" "$VALUES_FILE" "$VERSION" "$NAMESPACE" "$DRY_RUN" "$CREATE_NAMESPACE" "$WAIT" "$TIMEOUT"
+
+    if [ "$DRY_RUN" != "true" ]; then
+      check_pod_status "$RELEASE_NAME" "$NAMESPACE"
+      
+    else
+      log_message "INFO" "Skipping $perform_action due to DRY_RUN=true for release $RELEASE_NAME"
+      
+    fi
+
+    sleep 2s
+  done < <(yq e '.charts[] | [.release_name, .chart_name, .chart_repo, .values_file, .version, .namespace] | @tsv' config.yaml)
+
+
+elif [ "$ACTION" == "uninstall" ]; then
+  helmister "Helmister, Uninstall charts!"
+  generic_values
+  while IFS=$'\t' read -r RELEASE_NAME CHART_NAME CHART_REPO VALUES_FILE VERSION NAMESPACE; do
+    genric_chart_values
+    perform_action "$ACTION" "$RELEASE_NAME" "$CHART_NAME" "$CHART_REPO" "$VALUES_FILE" "$VERSION" "$NAMESPACE" "$DRY_RUN" "$CREATE_NAMESPACE" "$WAIT" "$TIMEOUT"
+    
+    sleep 2s
+  done < <(yq e '.charts[] | [.release_name, .chart_name, .chart_repo, .values_file, .version, .namespace] | @tsv' config.yaml)
+
+
+elif [ "$ACTION" == "help" ]; then
+  helmister "Helmister, Show help!"
+  show_help
+
+
+else
+  helmister "Uh-oh! something is wrong"  
+  log_message "ERROR" "Invalid action, please see help using 'helmister help'"
+  
+  exit 1
+fi
+
+log_message "INFO" "All actions completed successfully"

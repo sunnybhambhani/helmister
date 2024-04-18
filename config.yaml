@@ -1,0 +1,15 @@
+dry_run: false
+create_namespace: true
+wait: false
+timeout: false # If true, defaults to 20 mins
+charts:
+  - release_name: nginx
+    chart_name: nginx
+    chart_repo: oci://registry-1.docker.io/bitnamicharts
+    values_file: values/nginx-values.yaml
+  - release_name: argocd
+    chart_name: argo-cd
+    chart_repo: https://argoproj.github.io/argo-helm
+    values_file: values/argo-cd.yaml
+    version: 6.4.0
+    namespace: argo-cd
