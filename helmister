@@ -238,17 +238,6 @@ perform_action() {
   fi
 }
 
-
-# Condition to check if any arguments are provided or not
-# If not, point them to helmister help
-#if [ "$#" -ne 1 ]; then
-#  helmister "Uh-oh! something is wrong"
-#  log_message "INFO" "Usage: $0 [OPTIONS] [ARGUMENTS - Optional]"
-#  log_message "ERROR" "Invalid action, please see help using 'helmister help'"
-#  log_message "ERROR" "Error code: 6"
-#  exit 6
-#fi
-
 # Default config file
 CONFIG_FILE_NAME="config.yaml"
 
