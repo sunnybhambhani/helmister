@@ -81,4 +81,14 @@ Note
 
 Example
 --------------------------
+```
 $ ./helmister install -f /opt/app/config-dev.yaml
+```
+
+Timeline
+--------------------------
+
+- Version 1.0.0 was released on April 7, 2024.
+- Version 1.0.1 was released on August 15, 2024.
+  - Fixed issue https://github.com/sunnybhambhani/helmister/issues/1, allowing users to specify a custom path for config.yaml.
+  - Log entry: `[2024-08-15 12:30:06] [INFO] Generic/common values based on /home/sunny/config.yaml file`.

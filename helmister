@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # Author: Sunny Bhambhani
-# Version: 1.0.0
-# Date: 07-Apr-2024
+# Version: 1.0.1
+# Date published: 07-Apr-2024
+# Date updated: 15-Aug-2024
 # Description: This is a small bash utility which can help to install and uninstall multiple helm charts in one go.
 # Github URL: https://github.com/sunnybhambhani/helmister
 
