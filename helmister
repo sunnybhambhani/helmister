@@ -1,10 +1,14 @@
 #!/bin/bash
 
 # Author: Sunny Bhambhani
-# Version: 1.0.0
-# Date: 07-Apr-2024
+# Version: 1.0.1
+# Date published: 07-Apr-2024
+# Date updated: 15-Aug-2024
 # Description: This is a small bash utility which can help to install and uninstall multiple helm charts in one go.
 # Github URL: https://github.com/sunnybhambhani/helmister
+
+# Enable debug mode
+# set -x
 
 # Set the path of log and archive logs, these logs are basically helmister logs
 LOG_DEST="logs"
@@ -43,11 +47,13 @@ check_pod_status() {
     ELAPSED_TIME=$((CURRENT_TIME - START_TIME))
     if [[ $ELAPSED_TIME -gt 1200 ]]; then
       log_message "ERROR" "Pods for release $RELEASE_NAME are not in Running state for more than 20 minutes. Exiting"
+      log_message "ERROR" "Error code: 2"
       exit 2
     fi
     TOTAL_PODS=$(kubectl get pods -l app.kubernetes.io/instance=$RELEASE_NAME -n $NAMESPACE --no-headers | wc -l)
     if [[ $TOTAL_PODS == "0" ]]; then
       log_message "ERROR" "There are no pods for $RELEASE_NAME"
+      log_message "ERROR" "Error code: 3"
       exit 3
     else
       POD_STATUS=$(kubectl get pods -l app.kubernetes.io/instance=$RELEASE_NAME -n $NAMESPACE --no-headers | awk -F " " '{print $3}' | grep -vi running | wc -l)
@@ -68,7 +74,7 @@ check_pod_status() {
 # Function to show help on how to use this utility? and what all options are available
 # It also contains a sample config.yaml file which is a must for this utility to function properly.
 show_help() {
-  echo "Usage: $0 [OPTIONS]"
+  echo "Usage: $0 [OPTIONS] [ARGUMENTS - Optional]"
   echo "--------------------------"
   echo "Options:"
   echo "--------------------------"
@@ -79,6 +85,11 @@ show_help() {
                same config.yaml."
   echo "  help         Display help."
   echo ""
+  echo "--------------------------"
+  echo "Arguments:"
+  echo "--------------------------"
+  echo "  -f | --file  Helps you to mention explicit/specific config.yaml. If not provided it 
+               will consider the default one which is placed in the base folder."
   echo ""
   echo "Sample config.yaml:"
   echo "--------------------------
@@ -101,21 +112,30 @@ charts:
 Note: 
 --------------------------
 - Charts is an array, it can contain as many releases as you want.
-- It support oci:// and https:// registries.
-- All the key value pairs under charts are mandatory except version and namespace,
-  If not provided it will consider latest chart and default namespace respectively."
+- It support both oci:// and https:// registries.
+- All the key value pairs under charts are mandatory except version and namespace.
+  - If not provided it will consider latest chart and default namespace respectively.
+- You can mention explicit/specific config.yaml as well using -f | --file flag. 
+  - If not provided it will consider the default one which is placed in the base folder.
+  - If config.yaml is placed in /tmp directory, it might not work correctly. Ref: https://github.com/mikefarah/yq/issues/1305.
+- Initial messages are printed using cowsay (It is not necessary though if required, get this installed using apt/yum/brew/dpkg based on your distribution).
+
+Example:
+--------------------------
+$ ./helmister install -f /opt/app/config-dev.yaml"
+
   exit 0
 }
 
 
 # Function to log what all generic values we have in our config.yaml file
 generic_values() {
-  log_message "INFO" "Generic/common values based on config.yaml file"
+  log_message "INFO" "Generic/common values based on $CONFIG_FILE_NAME file"
     
-  DRY_RUN=$(yq e '.dry_run' config.yaml)
-  CREATE_NAMESPACE=$(yq e '.create_namespace' config.yaml)
-  WAIT=$(yq e '.wait' config.yaml)
-  TIMEOUT=$(yq e '.timeout' config.yaml)
+  DRY_RUN=$(yq e '.dry_run' $CONFIG_FILE_NAME)
+  CREATE_NAMESPACE=$(yq e '.create_namespace' $CONFIG_FILE_NAME)
+  WAIT=$(yq e '.wait' $CONFIG_FILE_NAME)
+  TIMEOUT=$(yq e '.timeout' $CONFIG_FILE_NAME)
     
   log_message "INFO" "Dry Run: $DRY_RUN"
   log_message "INFO" "Create Namespace: $CREATE_NAMESPACE"
@@ -127,7 +147,7 @@ generic_values() {
 
 # Funtion to log what all chart specific values we have in our config.yaml file
 genric_chart_values() {
-  log_message "INFO" "Chart specific values based on config.yaml file"
+  log_message "INFO" "Chart specific values based on $CONFIG_FILE_NAME file"
   log_message "INFO" "Release Name: $RELEASE_NAME"
   log_message "INFO" "Chart Name: $CHART_NAME"
   log_message "INFO" "Chart Repo: $CHART_REPO"
@@ -213,9 +233,10 @@ perform_action() {
 
   else
     helmister "Uh-oh! something is wrong"  
-    log_message "INFO" "Usage: $0 [OPTIONS]"
+    log_message "INFO" "Usage: $0 [OPTIONS] [ARGUMENTS - Optional]"
     log_message "ERROR" "Invalid action, please see help using 'helmister help'"
-    exit 1
+    log_message "ERROR" "Error code: 4"
+    exit 4
   fi
 
 
@@ -227,22 +248,41 @@ perform_action() {
     log_message "ERROR" "Failed to $ACTION $CHART_NAME with release name '$RELEASE_NAME' from/in $NAMESPACE namespace"
     log_message "ERROR" "Check $LOG_FILE for details."
     log_message "INFO" "****************************"
-    exit 1
+    log_message "ERROR" "Error code: 5"
+    exit 5
   fi
 }
 
-
-# Condition to check if any arguments are provided or not
-# If not, point them to helmister help
-if [ "$#" -ne 1 ]; then
-  helmister "Uh-oh! something is wrong"  
-  log_message "INFO" "Usage: $0 [OPTIONS]"
-  log_message "ERROR" "Invalid action, please see help using 'helmister help'"
-  exit 1
-fi
+# Default config file
+CONFIG_FILE_NAME="config.yaml"
 
 # Define ACTION i.e. the option which this utility is capable of
 ACTION=$1
+# Move past the first argument
+shift
+
+# Parse command line arguments for the explicit config file path
+while [[ "$#" -gt 0 ]]; do
+    if [[ "$1" == "-f" || "$1" == "--file" ]]; then
+        CONFIG_FILE_NAME="$2"
+        # Move past the flag and its value
+        shift 2
+    else
+        log_message "ERROR" "Unknown or unsupported flag: $1"
+        log_message "ERROR" "Error code: 7"
+        exit 7
+    fi
+done
+
+# Check if the file exists
+if [ ! -f "$CONFIG_FILE_NAME" ]; then
+    log_message "ERROR" "File '$CONFIG_FILE_NAME' does not exist"
+    log_message "ERROR" "Error code: 8"
+    exit 8
+fi
+
+log_message "INFO" "Using file: $CONFIG_FILE_NAME"
+
 
 # Based on the action install, uninstall, etc perform it and provide indented results and logs
 if [ "$ACTION" == "install" ]; then
@@ -261,7 +301,7 @@ if [ "$ACTION" == "install" ]; then
     fi
 
     sleep 2s
-  done < <(yq e '.charts[] | [.release_name, .chart_name, .chart_repo, .values_file, .version, .namespace] | @tsv' config.yaml)
+  done < <(yq e '.charts[] | [.release_name, .chart_name, .chart_repo, .values_file, .version, .namespace] | @tsv' $CONFIG_FILE_NAME)
 
 
 elif [ "$ACTION" == "uninstall" ]; then
@@ -272,7 +312,7 @@ elif [ "$ACTION" == "uninstall" ]; then
     perform_action "$ACTION" "$RELEASE_NAME" "$CHART_NAME" "$CHART_REPO" "$VALUES_FILE" "$VERSION" "$NAMESPACE" "$DRY_RUN" "$CREATE_NAMESPACE" "$WAIT" "$TIMEOUT"
     
     sleep 2s
-  done < <(yq e '.charts[] | [.release_name, .chart_name, .chart_repo, .values_file, .version, .namespace] | @tsv' config.yaml)
+  done < <(yq e '.charts[] | [.release_name, .chart_name, .chart_repo, .values_file, .version, .namespace] | @tsv' $CONFIG_FILE_NAME)
 
 
 elif [ "$ACTION" == "help" ]; then
@@ -283,8 +323,8 @@ elif [ "$ACTION" == "help" ]; then
 else
   helmister "Uh-oh! something is wrong"  
   log_message "ERROR" "Invalid action, please see help using 'helmister help'"
-  
-  exit 1
+  log_message "ERROR" "Error code: 9"
+  exit 9
 fi
 
 log_message "INFO" "All actions completed successfully"
