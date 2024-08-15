@@ -22,6 +22,7 @@ Dependencies
 
 Usage
 --------------------------
+$0 [OPTIONS] [ARGUMENTS - Optional]
 
 Options
 --------------------------
@@ -37,6 +38,13 @@ Uninstall multiple helm charts in one go, this command too will consume the same
 #### help
 
 Display help.
+
+Arguments
+--------------------------
+
+#### -f | --file
+
+Helps you to mention explicit/specific config.yaml. If not provided it will consider the default one which is placed in the base folder.
 
 Sample config.yaml
 --------------------------
@@ -66,4 +74,11 @@ Note
 - It also support both oci:// and https:// registries.
 - All the key value pairs under charts are mandatory except version and namespace,
   - If not provided it will consider latest chart and default namespace respectively.
+- You can mention explicit/specific config.yaml as well using -f | --file flag.
+  - If not provided it will consider the default one which is placed in the base folder.
+  - If config.yaml is placed in /tmp directory, it might not work correctly. Ref: https://github.com/mikefarah/yq/issues/1305.
 - Initial messages are printed using cowsay (It is not necessary though if required, get this installed using apt/yum/brew/dpkg based on your distribution).
+
+Example
+--------------------------
+$ ./helmister install -f /opt/app/config-dev.yaml
