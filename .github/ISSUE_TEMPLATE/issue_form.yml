@@ -1,11 +1,9 @@
-name: Bug Report
+name: Bug Report Form
 description: File a bug report.
 title: "[Bug]: "
 labels: ["bug", "triage"]
-projects: ["octo-org/1", "octo-org/44"]
 assignees:
-  - octocat
-type: bug
+  - sunnybhambhani
 body:
   - type: markdown
     attributes:
@@ -34,21 +32,21 @@ body:
       label: Version
       description: What version of our software are you running?
       options:
-        - 1.0.2 (Default)
-        - 1.0.3 (Edge)
+        - 1.0.1 (Default)
+        - 1.0.0 (Beta)
       default: 0
     validations:
       required: true
   - type: dropdown
-    id: browsers
+    id: k8s
     attributes:
-      label: What browsers are you seeing the problem on?
+      label: Which k8s distribution are you seeing the problem on?
       multiple: true
       options:
-        - Firefox
-        - Chrome
-        - Safari
-        - Microsoft Edge
+        - EKS
+        - AKS
+        - GKE
+        - Vanila
   - type: textarea
     id: logs
     attributes:
